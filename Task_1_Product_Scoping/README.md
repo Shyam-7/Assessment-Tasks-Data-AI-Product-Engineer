@@ -1,27 +1,70 @@
-# Product Brief: Marketing Insights Copilot (V1)
+# Marketing Insights Agent — V1
 
-## The Problem
-Answering the recurring question—*"How is our marketing performing across channels right now?"*—currently requires manual data extraction across individual tools and platforms. This creates a bottleneck dependent on specific analysts, leading to delayed responses and inconsistent reporting.
+A scoping exercise for an internal AI assistant that helps marketing teams answer performance questions faster and more consistently.
 
-## The Solution
-An internal querying tool accessible via the team's primary communication platform (Microsoft Teams) or a dedicated application as per the team's preference. It utilizes an AI Agent to interpret natural language questions, query a unified data warehouse, and return standardized metrics instantly within the chat interface.
+---
 
-## Target User: Internal Team Only
-V1 is strictly for internal Account Managers and Strategists, **not clients**. 
-Exposing raw AI outputs directly to a client introduces immense risk. If an AI hallucinates a metric, client trust is broken instantly. By keeping it internal, we employ a "Human-in-the-Loop" workflow: the Account Manager uses the bot to retrieve data instantly, verifies it makes strategic sense, and then formats it for the client if the client demands the statistic information to the team. 
+## What This Is
 
-## Success Criteria
-What does a successful interaction look like?
-1.  **Speed:** The answer comes back in the time it takes to send a chat message. 
-2.  **Consistency:** Two people asking the same question on the same day get the same numbers. The answer no longer depends on who you ask, how they pulled it, or which platform they remembered to check.
-3.  **Transparency** The response tells the user what it covers — which channels, which date range, which campaigns — so they can act on it or share it without second-guessing where it came from.
+This repository contains the product brief, architecture thinking, and design decisions for a tool that answers one recurring question the team faces constantly: *"How is our marketing performing across channels right now, and where should we be focusing?"*
 
-## How It Works (Architecture & Data Flow)
-To ensure the bot is reliable, it does not query live ad platform APIs directly (which are prone to rate limits and formatting discrepancies).
+---
 
-1.  **Ingestion & Storage:** Raw performance data from the actual sources(eg: Google Ads and Meta) is pulled automatically on a daily schedule and loaded into a central data warehouse with no manual effort.
-2.  **Transformation:** Before the data is made queryable, it is cleaned and standardised so that a metric like "spend" or "conversions" means exactly the same thing regardless of which platform it came from. This is what makes cross-channel comparisons trustworthy.
-3.  **The Trigger:** A user mentions the bot in a Teams channel: *"@MarketingCopilot what's the CPA for the Nike campaign this week?"*
-4.  **The Brain:** The Teams webhook triggers an **n8n AI Agent Node**. 
-5.  **Data Retrieval:** The n8n Agent utilizes a custom "Database Tool" to convert the natural language query into SQL, runs it against the warehouse, and synthesizes the numeric output into a conversational response.
+## What's in This Repository
 
+```
+/
+├── README.md                  ← You are here. Decisions, reasoning, and what I'd revisit.
+├── product_brief.md           ← What the tool is, who it's for, and what V1 does and doesn't do.
+└── assets/
+    ├── data_flow.png          ← How data moves from connected platforms to the chat response.
+    └── wireframe.png          ← What the assistant interaction looks like.
+```
+
+---
+
+## The Decisions I Made (and Why)
+
+### Internal only — no client access in V1
+An AI assistant will occasionally misinterpret a question or surface data from the wrong date range. When that happens internally, an analyst catches it. When it happens in front of a client, trust is broken in a way that is hard to repair. V1 keeps a human in the loop: Account Managers retrieve and verify information quickly, then communicate it to clients in their own words.
+
+### A conversational interface over a dashboard
+The brief had one hard constraint: don't change the tools the team uses. A new dashboard would require a new habit, a new login, and a context switch. A conversational assistant embedded in whatever tool the team already uses removes all of that. The specific platform it sits in — Teams, Slack, or a standalone app — is a deployment decision, not a product one.
+
+### A data warehouse rather than live platform queries
+The assistant does not query data sources directly. Instead, data is pulled on a scheduled basis and loaded into a central warehouse where it has been cleaned and standardised. Live APIs have rate limits, inconsistent field names, and occasional outages — querying a warehouse is significantly more reliable. The pipeline is not hardcoded to any specific platforms; which sources are connected depends on where clients are actually running campaigns.
+
+### Natural language to SQL as the core mechanism
+This is the most fragile part of the system — if the translation is wrong, the answer is wrong, with no obvious signal to the user. To manage this, every response includes the date range and channels it covers, and surfaces the last data sync time. Trust is built incrementally, not assumed.
+
+### n8n as the orchestration layer
+Chosen over a custom-coded backend because it keeps the system maintainable by someone who didn't build it. A visual workflow that another team member can read and debug matters more than raw flexibility at this stage.
+
+---
+
+## What's Deliberately Not in V1
+
+| Not building | Why |
+|---|---|
+| Client-facing access | Accuracy risk before the system is proven. |
+| Real-time data | Daily sync is sufficient. Real-time adds complexity without proportionate value in V1. |
+| Recommendations or strategic advice | The tool answers "what are the numbers," not "what should we do." |
+| Exhaustive platform coverage | V1 connects to the most-used sources. Additional platforms plug in without touching the assistant layer. |
+| Scheduled or proactive reports | Reactive querying first. Push reporting is a natural V2 feature. |
+
+---
+
+## What I Would Revisit With More Time
+
+- **Natural language to SQL accuracy:** The most fragile part of the system. I'd map the team's most common question patterns and stress-test against them before anyone relies on it for real decisions.
+- **Orchestration choice:** I don't know the team's existing stack in detail. There may be a better fit than n8n once the tooling is better understood.
+- **V2 direction:** Usage data should drive what gets built next — not assumptions made now.
+- **Client access, eventually:** Not right for V1, but worth designing with in mind so the architecture isn't a dead end.
+
+---
+
+## Decisions I Made Without Full Information
+
+- **Which platforms to prioritise:** Scoped around the most-used sources without knowing exactly what that set looks like.
+- **Question frequency:** Designed for a high-frequency use case. If it's asked a few times a week, a simpler solution might suffice.
+- **Team's comfort with AI outputs:** Assumed verifiability is needed from the start. If the team is already comfortable with AI-generated answers, some transparency features may be over-engineered for V1.
