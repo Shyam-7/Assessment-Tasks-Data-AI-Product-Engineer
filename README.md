@@ -21,8 +21,6 @@ Assessment tasks for the Data & AI Product Engineer position at Tacheon. Two tas
 │   │   └── load.py                 BigQuery loading with explicit schema
 │   ├── queries/
 │   │   └── summary.sql             Analytical queries with sample output
-│   ├── tests/
-│   │   └── test_transform.py       Unit tests for transformation logic
 │   └── requirements.txt
 │
 └── README.md                    ← You are here
