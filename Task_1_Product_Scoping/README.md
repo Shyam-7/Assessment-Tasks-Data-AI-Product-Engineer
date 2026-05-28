@@ -14,11 +14,8 @@ This repository contains the product brief, architecture thinking, and design de
 
 ```
 /
-├── README.md                  ← You are here. Decisions, reasoning, and what I'd revisit.
-├── product_brief.md           ← What the tool is, who it's for, and what V1 does and doesn't do.
-└── assets/
-    ├── data_flow.png          ← How data moves from connected platforms to the chat response.
-    └── wireframe.png          ← What the assistant interaction looks like.
+├── README.md          ← You are here. Decisions, reasoning, and what I'd revisit.
+└── product_brief.md   ← What the tool is, who it's for, and what V1 does and doesn't do.
 ```
 
 ---
