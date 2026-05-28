@@ -136,7 +136,7 @@ def load_to_bigquery(df: pd.DataFrame) -> bool:
     # Verify.
     table = client.get_table(table_id)
     logger.info(
-        "✓ Load complete — %d rows now in %s (table has %d rows total)",
+        "Load complete — %d rows now in %s (table has %d rows total)",
         len(df), table_id, table.num_rows,
     )
     return True

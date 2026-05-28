@@ -251,15 +251,47 @@ ORDER BY
 
 ### Sample Output
 
-> **Note:** This table will be populated with actual query results after running the pipeline. The sample below illustrates the expected format:
+> Run against BigQuery on 2026-05-28. Showing one representative day per city from the full 7-day result set (35 rows total):
 
-| city_name | date | avg_temp_c | min_temp_c | max_temp_c | temp_range_c | avg_humidity_pct | total_precipitation_mm | avg_wind_speed_kmh | max_wind_gust_kmh | severe_weather_hours | avg_heat_index |
+| city_name | date | avg_temp_c | min_temp_c | max_temp_c | temp_range_c | avg_humidity_pct | total_precip_mm | avg_wind_kmh | max_gust_kmh | severe_hrs | avg_heat_idx |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| London | 2025-05-21 | 14.2 | 9.1 | 19.8 | 10.7 | 72.3 | 0.00 | 12.4 | 28.3 | 0 | 14.2 |
-| Mumbai | 2025-05-21 | 31.5 | 28.2 | 34.8 | 6.6 | 68.1 | 2.40 | 15.7 | 35.2 | 3 | 38.4 |
-| New York | 2025-05-21 | 22.1 | 17.3 | 27.4 | 10.1 | 55.8 | 0.10 | 18.2 | 42.1 | 0 | 22.1 |
-| Sydney | 2025-05-21 | 16.8 | 13.5 | 20.1 | 6.6 | 78.4 | 1.20 | 22.3 | 48.7 | 0 | 16.8 |
-| Tokyo | 2025-05-21 | 20.3 | 16.9 | 24.2 | 7.3 | 62.5 | 0.30 | 10.1 | 22.4 | 0 | 20.3 |
+| London | 2026-05-25 | 26.8 | 19.8 | 33.8 | 14.0 | 50.4 | 0.00 | 8.7 | 33.1 | 0 | 26.8 |
+| Mumbai | 2026-05-25 | 31.2 | 28.8 | 33.8 | 5.0 | 71.9 | 2.20 | 10.0 | 44.3 | 21 | 38.6 |
+| New York | 2026-05-24 | 12.2 | 10.3 | 14.0 | 3.7 | 94.2 | 14.00 | 11.7 | 40.0 | 0 | 12.2 |
+| Sydney | 2026-05-26 | 17.5 | 16.0 | 19.3 | 3.3 | 95.3 | 16.40 | 5.1 | 24.5 | 0 | 17.5 |
+| Tokyo | 2026-05-22 | 14.9 | 12.4 | 17.7 | 5.3 | 81.2 | 17.70 | 12.5 | 41.8 | 0 | 14.9 |
+
+**Key observations from the data:**
+- Mumbai had 21 severe weather hours on 2026-05-25 (thunderstorms, WMO code 95), with a heat index of 38.6 °C vs an actual temperature of 31.2 °C — a +7.4 °C comfort gap.
+- New York received 14.0 mm of precipitation on 2026-05-24, coinciding with near-saturation humidity (94.2%).
+- Tokyo saw 17.7 mm rainfall on 2026-05-22, the heaviest single-day total across all cities.
+
+### Query 2: Top 10 Most Extreme Weather Moments
+
+```sql
+SELECT city_name, timestamp, temperature_2m, apparent_temperature,
+       wind_gusts_10m, precipitation, weather_code, heat_index, is_severe_weather
+FROM `weather_pipeline.hourly_weather`
+WHERE is_severe_weather = TRUE OR wind_gusts_10m > 50 OR precipitation > 5
+ORDER BY precipitation DESC, wind_gusts_10m DESC
+LIMIT 10;
+```
+
+| city_name | timestamp | temp_2m | apparent_temp | wind_gusts | precip_mm | weather_code | heat_index | severe |
+|---|---|---|---|---|---|---|---|---|
+| Mumbai | 2026-05-24 04:00 | 29.6 | 35.0 | 25.2 | 0.5 | 95 | 36.0 | true |
+| Mumbai | 2026-05-25 16:00 | 32.0 | 36.7 | 40.3 | 0.4 | 95 | 39.3 | true |
+| Mumbai | 2026-05-26 05:00 | 29.0 | 35.7 | 14.4 | 0.4 | 95 | 35.0 | true |
+| Mumbai | 2026-05-22 16:00 | 32.0 | 37.3 | 34.6 | 0.3 | 95 | 39.3 | true |
+| Mumbai | 2026-05-25 09:00 | 32.1 | 37.6 | 27.0 | 0.3 | 95 | 39.6 | true |
+| Mumbai | 2026-05-25 10:00 | 32.8 | 38.4 | 32.8 | 0.2 | 95 | 40.5 | true |
+| Mumbai | 2026-05-24 03:00 | 30.0 | 35.3 | 30.2 | 0.2 | 95 | 36.6 | true |
+| Mumbai | 2026-05-25 08:00 | 31.0 | 37.1 | 20.5 | 0.2 | 95 | 38.2 | true |
+| Mumbai | 2026-05-27 06:00 | 29.2 | 35.7 | 15.8 | 0.2 | 95 | 35.8 | true |
+| Mumbai | 2026-05-25 05:00 | 29.0 | 35.7 | 14.4 | 0.2 | 95 | 35.9 | true |
+
+All 10 extreme weather moments were in Mumbai — exclusively thunderstorms (WMO code 95). The heat index consistently reads 5–8 °C above the actual temperature, demonstrating why this derived field adds real analytical value.
+
 
 ---
 

@@ -38,7 +38,7 @@ CITIES = [
 # ---------------------------------------------------------------------------
 # BigQuery Configuration
 # ---------------------------------------------------------------------------
-BQ_PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "your-project-id")
+BQ_PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "cosmic-kite-427209-j4")
 BQ_DATASET_ID = "weather_pipeline"
 BQ_TABLE_ID = "hourly_weather"
 
